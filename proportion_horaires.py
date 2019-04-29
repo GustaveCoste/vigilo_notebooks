@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches
 
+GROUP_OTHER = True
+
 # Getting data
 resp = requests.get('https://vigilo.jesuisundesdeux.org/get_issues.php')
 df = pd.DataFrame(resp.json())
@@ -14,6 +16,10 @@ df.loc[df.time.dt.weekday > 4, 'daytype'] = 'Weekend'
 
 resp = requests.get('https://vigilo.jesuisundesdeux.org/get_categories.php')
 cat_names = resp.json()
+
+if GROUP_OTHER:
+    cat_names = {k: v for k, v in cat_names.items() if k in ('2', '100')}
+    df.loc[~df.categorie.isin(['2', '100']), 'categorie'] = '100'
 
 colors = plt.get_cmap('tab10').colors
 cat_color = {cat[0]: colors[x] for x, cat in
@@ -54,7 +60,7 @@ for row, daytype in enumerate(('Semaine', 'Weekend')):
             axs[row][col].set_title(label)
 
 fig.legend(handles=[matplotlib.patches.Patch(facecolor=col, label=cat_names[cat]) for cat, col in cat_color.items()],
-           bbox_to_anchor=(0.75, 0.2), ncol=3, frameon=False)
+           bbox_to_anchor=(0.6, 0.2), ncol=3, frameon=False)
 
 fig.suptitle("Proportion des observations de Vǐgǐlo par catégorie et par heure", size=16)
 plt.tight_layout()
